@@ -49,10 +49,12 @@ article_summaries = []
 # create a list to store all article top image
 article_top_images = []
 
-for file in html_file_paths:
+with open('./html/index.txt', 'r') as f:
+    page_list = f.readlines()
+
+for line in page_list:
     # create a article object
-    file = 'https://www.cnn.com/2019/12/23/tech/apple-tech-history/index.html'
-    article = Article(url = file, config = config)
+    article = Article(url = line, config = config)
     # download html
     article.download()
     # parse html
@@ -75,6 +77,36 @@ for file in html_file_paths:
     article_summaries.append(article.summary)
     # append article top image to article_top_images list
     article_top_images.append(article.top_image)
+    directory = './data/'+ article.title
+    os.mkdir(directory)
+    with open(f'{directory}/time.txt') as f:
+        #example: 2020-04-01 00:00:00
+        #seperate year, month, day, hour, minute, second from example
+        year = article.publish_date[0:4]
+        month = article.publish_date[5:7]
+        day = article.publish_date[8:10]
+        hour = article.publish_date[11:13]
+        minute = article.publish_date[14:16]
+        second = article.publish_date[17:19]
+        f.write(year)
+        f.write(month)
+        f.write(day) 
+
+    with open(f'{directory}/author.txt') as f:
+        f.write(article.authors)
+    with open(f'{directory}/tag.txt') as f:
+        f.write(article.keywords)
+    with open(f'{directory}/summary.txt') as f:
+        f.write(article.summary)
+    with open(f'{directory}/image.txt') as f:
+        f.write(article.top_image)
+    with open(f'{directory}/content.txt') as f:
+        f.write(article.text)
+    with open(f'{directory}/title.txt') as f:
+        f.write(article.title)
+    with open(f'{directory}/url.txt') as f:
+        f.write(article.url)
+
 
 
 # store into data folder, each file is an article
