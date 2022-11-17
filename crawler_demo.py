@@ -26,7 +26,7 @@ def producer(urlList, session):
     for url in urlList:
         try:
             date = url[-1:-9:-1][::-1]
-            time.sleep(0.5)
+            time.sleep(5)
             response = session.get(url=url, proxies=PROXIES)
             # result_item = json.loads(response.text).get('items')[0]
             result_item = json.loads(response.text).get('items')
@@ -47,13 +47,21 @@ def consumer(session):
     while True:
         if q.get == None:
             q.task_done()
-            break
+            return
         try:
             url = q.get()
-            response = session.get(url=url, proxies=PROXIES, allow_redirects=False)
+            url_front = url[:url.find('cnn')]
+            url_back1 = 'https://www.cnn.com/data/ocs/section/business/tech/index.html:tech-zone-2/views/zones/common/zone-manager.izl'
+            url_back2 = 'https://www.cnn.com/data/ocs/section/business/tech/index.html:tech-zone-3/views/zones/common/zone-manager.izl'
+            url_top_news = url_front+url_back1
+            url_more_tech_news = url_front+url_back2
+            response = session.get(url = url_top_news, proxies=PROXIES)
             soup = bs4(response.text, 'html.parser')
-            #change url string into valid filename
-            filename = "".join(i for i in url if i not in "\/:*?<>|") + '.html' 
+
+            # response = session.get(url=url, proxies=PROXIES, allow_redirects=False)
+            # soup = bs4(response.text, 'html.parser')
+            # #change url string into valid filename
+            filename = "".join(i for i in url_top_news if i not in "\/:*?<>|") + '.html' 
             with open(f'./html/{filename}', 'wb') as f:
                 f.write(soup.prettify().encode('utf-8'))
             q.task_done()
@@ -95,19 +103,20 @@ base_url_list_list = [base_url_list[i:i+12] for i in range(0, len(base_url_list)
 
 for i in range(12):
     t = threading.Thread(target=producer, args=(base_url_list_list[i], session))
+    time.sleep(5)
     t.start()
 
-# for i in range(4):
-#     c = threading.Thread(target=consumer, args=(session2,))
-#     c.start()
+for i in range(4):
+    c = threading.Thread(target=consumer, args=(session2,))
+    c.start()
 
 t.join()
 for i in range(4):
     q.put(None)
 
-# c.join()
+c.join()
 
-
+print('done')
 
 
 

@@ -13,7 +13,7 @@ def clean_url(token_string_list, date_string):
     #concatenate each item in list
     # date_string = ''.join(date_string_list)
     token = token_string_list[0] 
-    print(token_string_list)
+    # print(token_string_list)
     template_url = f'https://web.archive.org/web/{date_string}{token}/cnn.com/business/tech'
     return template_url
 # clean_url([130328, 200, 1])
