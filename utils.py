@@ -16,4 +16,5 @@ def clean_url(token_string_list, date_string):
     # print(token_string_list)
     template_url = f'https://web.archive.org/web/{date_string}{token}/cnn.com/business/tech'
     return template_url
-# clean_url([130328, 200, 1])
+
+
