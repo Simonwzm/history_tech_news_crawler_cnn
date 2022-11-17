@@ -38,6 +38,9 @@ def consumer2(session):
             filename = "".join(i for i in url if i not in "\/:*?<>|") + '.html' 
             with open(f'./html/{filename}', 'wb') as f:
                 f.write(soup.prettify().encode('utf-8'))
+            with open(f'./html/index.txt', 'ab') as f:
+                # write url into index.txt
+                f.write(url.encode('utf-8'))
             q2.task_done()
         except Exception as e:
             print('error in downloader')
@@ -104,28 +107,47 @@ def consumer(session):
         time.sleep(3)
         print('get:', url_top_news)
         response = session.get(url = url_top_news, proxies=PROXIES, allow_redirects=True, timeout=100)
-        print(response.text)
+        time.sleep(3)
+        response2 = session.get(url = url_more_tech_news, proxies=PROXIES, allow_redirects=True, timeout=100)
+        # print(response.text)
         try:
             jsn = json.loads(response.text)
         except:
-            filename = "".join(i for i in url_top_news if i not in "\/:*?<>|") + '.html'
-            with open(f'./html/{filename}.html', 'wb') as f:
-                f.write(response.text.encode('utf-8'))
-            continue
-        html = jsn.get('html')
-        print(html)
-        get_all_links(html)
+            time.sleep(3)
+            soup1 = bs4(response.text, 'html.parser')
+            #find iframe with id playback
+            iframe = soup1.find('iframe', id='playback')
+            #get src attribute of iframe
+            src = iframe.get('src')
+            response = session.get(url = src, proxies=PROXIES, allow_redirects=True)
+            jsn = json.loads(response.text)
 
-        # response = session.get(url=url, proxies=PROXIES, allow_redirects=False)
-        # soup = bs4(response.text, 'html.parser')
-        # #change url string into valid filename
-        # filename = "".join(i for i in url_top_news if i not in "\/:*?<>|") + '.html' 
-        # with open(f'./html/{filename}', 'wb') as f:
-        #     f.write(soup.prettify().encode('utf-8'))
+            print('here')
+            filename = "".join(i for i in url_top_news if i not in "\/:*?<>|") + '.html'
+            with open(f'./error/{filename}.html', 'wb') as f:
+                f.write(response.text.encode('utf-8'))
+        try:
+            jsn2 = json.loads(response2.text)
+        except:
+            soup2 = bs4(response2.text, 'html.parser')
+            #find iframe with id playback
+            iframe2 = soup2.find('iframe', id='playback')
+            #get src attribute of iframe
+            src2 = iframe.get('src')
+            response2 = session.get(url = src2, proxies=PROXIES, allow_redirects=True)
+            jsn2 = json.loads(response2.text)
+            print('here') 
+            filename = "".join(i for i in url_more_tech_news if i not in "\/:*?<>|") + '.html'
+            with open(f'./error/{filename}.html', 'wb') as f:
+                f.write(response2.text.encode('utf-8'))
+
+        html = jsn.get('html')
+        html2 = jsn2.get('html')
+        # print(html)
+        get_all_links(html)
+        get_all_links(html2)
+
         q.task_done()
-        # except Exception as e:
-        #     print(e)
-        #     continue
 
 config  = Config()
 config.browser_user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36'
@@ -157,29 +179,29 @@ session3.timeout = 10000
 response = session.get(url=BASE_URL, proxies=PROXIES)
 template_url = 'https://web.archive.org/__wb/calendarcaptures/2?url=cnn.com%2Fbusiness%2Ftech&date='
 
-date_str_list = utils.get_date_str_list(datetime.date(2019, 1, 1), datetime.date(2019, 12, 31))
+date_str_list = utils.get_date_str_list(datetime.date(2020, 1, 1), datetime.date(2020, 12, 31))
 base_url_list = [template_url+str(date) for date in date_str_list]
-#split list into 12 slices
-base_url_list_list = [base_url_list[i:i+12] for i in range(0, len(base_url_list), 12)]
-# print(base_url_list_list)
-
-for i in range(12):
-    print('start producer')
-    t = threading.Thread(target=producer, args=(base_url_list_list[i], session))
-    time.sleep(.5)
-    t.start()
-
-# for i in range(2):
-#     c = threading.Thread(target=consumer, args=(session2,))
-#     print('start consumer')
-#     time.sleep(5)
-#     c.start()
-consumer(session2)
+#split list into 4 slices
+base_url_list_list = [base_url_list[i::4] for i in range(4)]
 
 for i in range(4):
     c2 = threading.Thread(target=consumer2, args=(session3,))
     print('start web page downloader')
     c2.start()
+
+for i in range(4):
+    print('start producer')
+    t = threading.Thread(target=producer, args=(base_url_list_list[i], session))
+    time.sleep(4)
+    t.start()
+
+for i in range(2):
+    c = threading.Thread(target=consumer, args=(session2,))
+    print('start consumer')
+    time.sleep(5)
+    c.start()
+# consumer(session2)
+
 
 t.join()
 print('t done')
@@ -187,13 +209,13 @@ for i in range(4):
     q.put(None)
 
 
-# c.join()
-# print('c done')
-# for i in range(4):
-#     q2.put(None)
+c.join()
+print('c done')
+for i in range(4):
+    q2.put(None)
 
-# c2.join()
-# print('done')
+c2.join()
+print('done')
 
 
 
