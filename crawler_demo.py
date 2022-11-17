@@ -19,6 +19,7 @@ from newspaper import outputformatters
 import queue
 import threading
 import json
+import page_analyzer
 
 
 q = queue.Queue()
@@ -28,16 +29,17 @@ def consumer2(session):
     while True:
         if q2.get == None:
             q2.task_done()
-            return
+            continue
         try:
             url = q2.get()
             print('get:', url)
-            response = session.get(url=url, proxies=PROXIES, allow_redirects=False)
-            soup = bs4(response.text, 'html.parser')
+            # response = session.get(url=url, proxies=PROXIES, allow_redirects=False)
+            # soup = bs4(response.text, 'html.parser')
             #change url string into valid filename
+            page_analyzer.parse(url)
             filename = "".join(i for i in url if i not in "\/:*?<>|") + '.html' 
-            with open(f'./html/{filename}', 'wb') as f:
-                f.write(soup.prettify().encode('utf-8'))
+            # with open(f'./html/{filename}', 'wb') as f:
+            #     f.write(soup.prettify().encode('utf-8'))
             with open(f'./html/index.txt', 'ab') as f:
                 # write url into index.txt
                 f.write(url.encode('utf-8'))
@@ -180,7 +182,7 @@ session3.timeout = 10000
 response = session.get(url=BASE_URL, proxies=PROXIES)
 template_url = 'https://web.archive.org/__wb/calendarcaptures/2?url=cnn.com%2Fbusiness%2Ftech&date='
 
-date_str_list = utils.get_date_str_list(datetime.date(2020, 9, 28), datetime.date(2020, 12, 31))
+date_str_list = utils.get_date_str_list(datetime.date(2020, 5, 1), datetime.date(2020, 6, 1))
 base_url_list = [template_url+str(date) for date in date_str_list]
 #split list into 4 slices
 base_url_list_list = [base_url_list[i::4] for i in range(4)]
