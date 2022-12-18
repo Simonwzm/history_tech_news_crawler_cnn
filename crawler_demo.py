@@ -182,7 +182,7 @@ session3.timeout = 10000
 response = session.get(url=BASE_URL, proxies=PROXIES)
 template_url = 'https://web.archive.org/__wb/calendarcaptures/2?url=cnn.com%2Fbusiness%2Ftech&date='
 
-date_str_list = utils.get_date_str_list(datetime.date(2020, 5, 1), datetime.date(2020, 6, 1))
+date_str_list = utils.get_date_str_list(datetime.date(2019, 1, 1), datetime.date(2020, 9, 29))
 base_url_list = [template_url+str(date) for date in date_str_list]
 #split list into 4 slices
 base_url_list_list = [base_url_list[i::4] for i in range(4)]
